@@ -31,6 +31,27 @@ const createMeeting = async (req, res) => {
     }
 };
 
+const getUserMeetings = async (req, res) => {
+    try {
+        const meetings = await meetingService.getUserMeetings(
+            req.user.userId
+        );
+
+        return res.status(200).json({
+            success: true,
+            meetings
+        });
+    } catch (error) {
+        console.error("Get user meetings error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch meetings"
+        });
+    }
+};
+
 export {
-    createMeeting
+    createMeeting,
+    getUserMeetings
 };

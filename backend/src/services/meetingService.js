@@ -17,6 +17,17 @@ const createMeeting = async ({ title, userId }) => {
     return meeting;
 };
 
+const getUserMeetings = async (userId) => {
+    const meetings = await Meeting.find({
+        host: userId
+    }).sort({
+        createdAt: -1
+    });
+
+    return meetings;
+};
+
 export default {
-    createMeeting
+    createMeeting,
+    getUserMeetings
 };
