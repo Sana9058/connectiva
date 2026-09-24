@@ -58,6 +58,7 @@ const joinMeeting = async ({ roomId, userId }) => {
         user: userId
     });
 
+    // User is already inside the meeting
     if (existingParticipant && !existingParticipant.leftAt) {
         return {
             meeting,
@@ -76,16 +77,28 @@ const joinMeeting = async ({ roomId, userId }) => {
         throw error;
     }
 
-    const participant = await Participant.create({
-        meeting: meeting._id,
-        user: userId,
-        joinedAt: new Date(),
-        leftAt: null
-    });
+    let participant;
+
+    // User previously joined and left.
+    // Reuse the existing participant record.
+    if (existingParticipant) {
+        existingParticipant.joinedAt = new Date();
+        existingParticipant.leftAt = null;
+
+        participant = await existingParticipant.save();
+    } else {
+        participant = await Participant.create({
+            meeting: meeting._id,
+            user: userId,
+            joinedAt: new Date(),
+            leftAt: null
+        });
+    }
 
     if (meeting.status === "scheduled") {
         meeting.status = "active";
         meeting.startedAt = new Date();
+
         await meeting.save();
     }
 
@@ -95,9 +108,92 @@ const joinMeeting = async ({ roomId, userId }) => {
     };
 };
 
+const leaveMeeting = async ({ roomId, userId }) => {
+    const meeting = await Meeting.findOne({
+        roomId
+    });
+
+    if (!meeting) {
+        const error = new Error("Meeting not found");
+        error.statusCode = 404;
+        throw error;
+    }
+
+    if (meeting.status === "ended") {
+        const error = new Error("Meeting has already ended");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const participant = await Participant.findOne({
+        meeting: meeting._id,
+        user: userId
+    });
+
+    if (!participant || participant.leftAt) {
+        const error = new Error("User is not currently in the meeting");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    participant.leftAt = new Date();
+
+    await participant.save();
+
+    return {
+        meeting,
+        participant
+    };
+};
+
+const endMeeting = async ({ roomId, userId }) => {
+    const meeting = await Meeting.findOne({
+        roomId
+    });
+
+    if (!meeting) {
+        const error = new Error("Meeting not found");
+        error.statusCode = 404;
+        throw error;
+    }
+
+    if (meeting.host.toString() !== userId.toString()) {
+        const error = new Error("Only the meeting host can end the meeting");
+        error.statusCode = 403;
+        throw error;
+    }
+
+    if (meeting.status === "ended") {
+        const error = new Error("Meeting has already ended");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const endedAt = new Date();
+
+    meeting.status = "ended";
+    meeting.endedAt = endedAt;
+
+    await meeting.save();
+
+    await Participant.updateMany(
+        {
+            meeting: meeting._id,
+            leftAt: null
+        },
+        {
+            leftAt: endedAt
+        }
+    );
+
+    return meeting;
+};
+
 export default {
     createMeeting,
     getUserMeetings,
     getMeetingByRoomId,
-    joinMeeting
+    joinMeeting,
+    leaveMeeting,
+    endMeeting
 };

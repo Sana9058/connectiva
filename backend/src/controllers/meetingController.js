@@ -105,9 +105,64 @@ const joinMeeting = async (req, res) => {
     }
 };
 
+const leaveMeeting = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+
+        const result = await meetingService.leaveMeeting({
+            roomId,
+            userId: req.user.userId
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Left meeting successfully",
+            meeting: result.meeting,
+            participant: result.participant
+        });
+    } catch (error) {
+        console.error("Leave meeting error:", error);
+
+        return res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.statusCode
+                ? error.message
+                : "Failed to leave meeting"
+        });
+    }
+};
+
+const endMeeting = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+
+        const meeting = await meetingService.endMeeting({
+            roomId,
+            userId: req.user.userId
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Meeting ended successfully",
+            meeting
+        });
+    } catch (error) {
+        console.error("End meeting error:", error);
+
+        return res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.statusCode
+                ? error.message
+                : "Failed to end meeting"
+        });
+    }
+};
+
 export {
     createMeeting,
     getUserMeetings,
     getMeetingByRoomId,
-    joinMeeting
+    joinMeeting,
+    leaveMeeting,
+    endMeeting
 };
