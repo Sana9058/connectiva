@@ -78,6 +78,44 @@ const getMeetingByRoomId = async (req, res) => {
     }
 };
 
+const getMeetingParticipants = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+
+        await meetingService.authorizeMeetingAccess({
+           roomId,
+           userId: req.user.userId
+        });
+        const result = await meetingService.getMeetingParticipants({
+            roomId
+        });
+
+        const participants = result.participants.map((participant) => ({
+            user: participant.user,
+            joinedAt: participant.joinedAt,
+            leftAt: participant.leftAt,
+            isActive: participant.leftAt === null,
+            isHost:
+                participant.user._id.toString() ===
+                result.meeting.host.toString()
+        }));
+
+        return res.status(200).json({
+            success: true,
+            participants
+        });
+    } catch (error) {
+        console.error("Get meeting participants error:", error);
+
+        return res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.statusCode
+                ? error.message
+                : "Failed to fetch meeting participants"
+        });
+    }
+};
+
 const joinMeeting = async (req, res) => {
     try {
         const { roomId } = req.params;
@@ -162,6 +200,7 @@ export {
     createMeeting,
     getUserMeetings,
     getMeetingByRoomId,
+    getMeetingParticipants,
     joinMeeting,
     leaveMeeting,
     endMeeting

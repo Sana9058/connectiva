@@ -36,6 +36,31 @@ const getMeetingByRoomId = async (roomId) => {
     return meeting;
 };
 
+const getMeetingParticipants = async ({ roomId }) => {
+    const meeting = await Meeting.findOne({
+        roomId
+    });
+
+    if (!meeting) {
+        const error = new Error("Meeting not found");
+        error.statusCode = 404;
+        throw error;
+    }
+
+    const participants = await Participant.find({
+        meeting: meeting._id
+    })
+        .populate("user", "name email")
+        .sort({
+            joinedAt: 1
+        });
+
+    return {
+        meeting,
+        participants
+    };
+};
+
 const joinMeeting = async ({ roomId, userId }) => {
     const meeting = await Meeting.findOne({
         roomId
@@ -189,11 +214,45 @@ const endMeeting = async ({ roomId, userId }) => {
     return meeting;
 };
 
+const authorizeMeetingAccess = async ({ roomId, userId }) => {
+    const meeting = await Meeting.findOne({
+        roomId
+    });
+
+    if (!meeting) {
+        const error = new Error("Meeting not found");
+        error.statusCode = 404;
+        throw error;
+    }
+
+    const isHost =
+        meeting.host.toString() === userId.toString();
+
+    if (isHost) {
+        return meeting;
+    }
+
+    const participant = await Participant.findOne({
+        meeting: meeting._id,
+        user: userId
+    });
+
+    if (!participant) {
+        const error = new Error("You are not a participant in this meeting");
+        error.statusCode = 403;
+        throw error;
+    }
+
+    return meeting;
+};
+
 export default {
     createMeeting,
     getUserMeetings,
     getMeetingByRoomId,
+    getMeetingParticipants,
     joinMeeting,
     leaveMeeting,
-    endMeeting
+    endMeeting,
+    authorizeMeetingAccess
 };
