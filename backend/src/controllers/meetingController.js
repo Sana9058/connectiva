@@ -51,7 +51,35 @@ const getUserMeetings = async (req, res) => {
     }
 };
 
+const getMeetingByRoomId = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+
+        const meeting = await meetingService.getMeetingByRoomId(roomId);
+
+        if (!meeting) {
+            return res.status(404).json({
+                success: false,
+                message: "Meeting not found"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            meeting
+        });
+    } catch (error) {
+        console.error("Get meeting error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch meeting"
+        });
+    }
+};
+
 export {
     createMeeting,
-    getUserMeetings
+    getUserMeetings,
+    getMeetingByRoomId
 };

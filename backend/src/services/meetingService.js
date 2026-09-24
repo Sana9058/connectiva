@@ -27,7 +27,16 @@ const getUserMeetings = async (userId) => {
     return meetings;
 };
 
+const getMeetingByRoomId = async (roomId) => {
+    const meeting = await Meeting.findOne({
+        roomId
+    });
+
+    return meeting;
+};
+
 export default {
     createMeeting,
-    getUserMeetings
+    getUserMeetings,
+    getMeetingByRoomId
 };
