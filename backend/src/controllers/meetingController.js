@@ -78,8 +78,36 @@ const getMeetingByRoomId = async (req, res) => {
     }
 };
 
+const joinMeeting = async (req, res) => {
+    try {
+        const { roomId } = req.params;
+
+        const result = await meetingService.joinMeeting({
+            roomId,
+            userId: req.user.userId
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Joined meeting successfully",
+            meeting: result.meeting,
+            participant: result.participant
+        });
+    } catch (error) {
+        console.error("Join meeting error:", error);
+
+        return res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.statusCode
+                ? error.message
+                : "Failed to join meeting"
+        });
+    }
+};
+
 export {
     createMeeting,
     getUserMeetings,
-    getMeetingByRoomId
+    getMeetingByRoomId,
+    joinMeeting
 };
