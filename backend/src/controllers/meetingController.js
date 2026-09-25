@@ -196,6 +196,33 @@ const endMeeting = async (req, res) => {
     }
 };
 
+const removeParticipant = async (req, res) => {
+    try {
+        const { roomId, participantId } = req.params;
+
+        const result = await meetingService.removeParticipant({
+            roomId,
+            hostId: req.user.userId,
+            participantId
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Participant removed successfully",
+            participant: result.participant
+        });
+    } catch (error) {
+        console.error("Remove participant error:", error);
+
+        return res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.statusCode
+                ? error.message
+                : "Failed to remove participant"
+        });
+    }
+};
+
 export {
     createMeeting,
     getUserMeetings,
@@ -203,5 +230,6 @@ export {
     getMeetingParticipants,
     joinMeeting,
     leaveMeeting,
-    endMeeting
+    endMeeting,
+    removeParticipant
 };

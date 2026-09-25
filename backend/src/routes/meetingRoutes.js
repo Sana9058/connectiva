@@ -6,7 +6,8 @@ import {
     getMeetingParticipants,
     joinMeeting,
     leaveMeeting,
-    endMeeting
+    endMeeting,
+    removeParticipant
 } from "../controllers/meetingController.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 
@@ -18,6 +19,7 @@ router.get("/:roomId/participants", authMiddleware, getMeetingParticipants);
 router.get("/:roomId", authMiddleware, getMeetingByRoomId);
 router.post("/:roomId/join", authMiddleware, joinMeeting);
 router.post("/:roomId/leave", authMiddleware, leaveMeeting);
+router.post("/:roomId/participants/:participantId/remove", authMiddleware, removeParticipant);
 router.post("/:roomId/end", authMiddleware, endMeeting);
 
 export default router;

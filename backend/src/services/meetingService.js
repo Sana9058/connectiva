@@ -214,6 +214,72 @@ const endMeeting = async ({ roomId, userId }) => {
     return meeting;
 };
 
+const removeParticipant = async ({
+    roomId,
+    hostId,
+    participantId
+}) => {
+    const meeting = await Meeting.findOne({
+        roomId
+    });
+
+    if (!meeting) {
+        const error = new Error("Meeting not found");
+        error.statusCode = 404;
+        throw error;
+    }
+
+    if (meeting.host.toString() !== hostId.toString()) {
+        const error = new Error(
+            "Only the meeting host can remove participants"
+        );
+        error.statusCode = 403;
+        throw error;
+    }
+
+    if (meeting.status === "ended") {
+        const error = new Error("Meeting has already ended");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    if (meeting.host.toString() === participantId.toString()) {
+        const error = new Error("The host cannot be removed");
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const participant = await Participant.findOne({
+        meeting: meeting._id,
+        user: participantId
+    });
+
+    if (!participant) {
+        const error = new Error(
+            "Participant is not part of this meeting"
+        );
+        error.statusCode = 404;
+        throw error;
+    }
+
+    if (participant.leftAt) {
+        const error = new Error(
+            "Participant is not currently in the meeting"
+        );
+        error.statusCode = 400;
+        throw error;
+    }
+
+    participant.leftAt = new Date();
+
+    await participant.save();
+
+    return {
+        meeting,
+        participant
+    };
+};
+
 const authorizeMeetingAccess = async ({ roomId, userId }) => {
     const meeting = await Meeting.findOne({
         roomId
@@ -254,5 +320,6 @@ export default {
     joinMeeting,
     leaveMeeting,
     endMeeting,
+    removeParticipant,
     authorizeMeetingAccess
 };
