@@ -28,6 +28,50 @@ const getUserMeetings = async (userId) => {
     return meetings;
 };
 
+const getMeetingHistory = async (userId) => {
+    const meetings = await Meeting.find({
+        host: userId
+    })
+        .sort({
+            createdAt: -1
+        })
+        .lean();
+
+    const history = await Promise.all(
+        meetings.map(async (meeting) => {
+            const participants = await Participant.find({
+                meeting: meeting._id
+            }).lean();
+
+            const participantCount = participants.length;
+
+            let duration = null;
+
+            if (meeting.startedAt) {
+                const endTime = meeting.endedAt || new Date();
+
+                duration = Math.floor(
+                    (endTime.getTime() - meeting.startedAt.getTime()) /
+                        1000
+                );
+            }
+
+            return {
+                roomId: meeting.roomId,
+                title: meeting.title,
+                status: meeting.status,
+                createdAt: meeting.createdAt,
+                startedAt: meeting.startedAt,
+                endedAt: meeting.endedAt,
+                duration,
+                participantCount
+            };
+        })
+    );
+
+    return history;
+};
+
 const getMeetingByRoomId = async (roomId) => {
     const meeting = await Meeting.findOne({
         roomId
@@ -315,6 +359,7 @@ const authorizeMeetingAccess = async ({ roomId, userId }) => {
 export default {
     createMeeting,
     getUserMeetings,
+    getMeetingHistory,
     getMeetingByRoomId,
     getMeetingParticipants,
     joinMeeting,

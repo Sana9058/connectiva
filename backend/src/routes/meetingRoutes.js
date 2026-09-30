@@ -2,6 +2,7 @@ import express from "express";
 import {
     createMeeting,
     getUserMeetings,
+    getMeetingHistory,
     getMeetingByRoomId,
     getMeetingParticipants,
     joinMeeting,
@@ -15,6 +16,7 @@ const router = express.Router();
 
 router.post("/", authMiddleware, createMeeting);
 router.get("/", authMiddleware, getUserMeetings);
+router.get("/history", authMiddleware, getMeetingHistory);
 router.get("/:roomId/participants", authMiddleware, getMeetingParticipants);
 router.get("/:roomId", authMiddleware, getMeetingByRoomId);
 router.post("/:roomId/join", authMiddleware, joinMeeting);

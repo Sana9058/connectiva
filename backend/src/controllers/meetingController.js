@@ -51,6 +51,26 @@ const getUserMeetings = async (req, res) => {
     }
 };
 
+const getMeetingHistory = async (req, res) => {
+    try {
+        const history = await meetingService.getMeetingHistory(
+            req.user.userId
+        );
+
+        return res.status(200).json({
+            success: true,
+            history
+        });
+    } catch (error) {
+        console.error("Get meeting history error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch meeting history"
+        });
+    }
+};
+
 const getMeetingByRoomId = async (req, res) => {
     try {
         const { roomId } = req.params;
@@ -226,6 +246,7 @@ const removeParticipant = async (req, res) => {
 export {
     createMeeting,
     getUserMeetings,
+    getMeetingHistory,
     getMeetingByRoomId,
     getMeetingParticipants,
     joinMeeting,
