@@ -10,6 +10,11 @@ import {
     endMeeting,
     removeParticipant
 } from "../controllers/meetingController.js";
+import {
+    createMessage,
+    getMeetingMessages
+} from "../controllers/messageController.js";
+
 import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -18,6 +23,8 @@ router.post("/", authMiddleware, createMeeting);
 router.get("/", authMiddleware, getUserMeetings);
 router.get("/history", authMiddleware, getMeetingHistory);
 router.get("/:roomId/participants", authMiddleware, getMeetingParticipants);
+router.post("/:roomId/messages", authMiddleware, createMessage);
+router.get("/:roomId/messages", authMiddleware, getMeetingMessages);
 router.get("/:roomId", authMiddleware, getMeetingByRoomId);
 router.post("/:roomId/join", authMiddleware, joinMeeting);
 router.post("/:roomId/leave", authMiddleware, leaveMeeting);
